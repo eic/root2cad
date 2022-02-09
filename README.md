@@ -3,6 +3,8 @@ CERN ROOT geometry converter to CAD format (GLTF)
 
 ![drich cad](doc/drich_wireframe_600px-w.png)
 
+<img src="doc/drich_wireframe_600px-w.png" style="width:500px"/>
+
 ## TODO
 
 - switch JSROOT from git submodule to npm dependency (possible after the next JSroot tag)

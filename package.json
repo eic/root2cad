@@ -1,0 +1,22 @@
+{
+  "name": "root2cad",
+  "version": "1.0.0",
+  "description": "CERN ROOT geometry export to CAD",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Cern ROOT",
+    "CAD",
+    "geometry",
+    "GLTF"
+  ],
+  "author": "Dmitry Romanov",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^9.0.0",
+    "three": "^0.137.5",
+    "vblob": "^1.0.2"
+  }
+}

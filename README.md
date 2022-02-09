@@ -1,9 +1,7 @@
 # root2cad
 CERN ROOT geometry converter to CAD format (GLTF)
 
-![drich cad](doc/drich_wireframe_600px-w.png)
-
-<img src="doc/drich_wireframe_600px-w.png" style="width:500px"/>
+<img src="doc/drich_wireframe_600px-w.png" style="width:400px"/>
 
 ## TODO
 

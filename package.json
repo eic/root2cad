@@ -1,5 +1,5 @@
 {
-  "name": "root2cad",
+  "name": "rootcadex",
   "version": "1.0.0",
   "description": "CERN ROOT geometry export to CAD",
   "main": "index.js",
@@ -7,16 +7,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "Cern ROOT",
+    "ROOT",
     "CAD",
-    "geometry",
-    "GLTF"
+    "geometry"
   ],
   "author": "Dmitry Romanov",
   "license": "MIT",
-  "dependencies": {
-    "commander": "^9.0.0",
+  "dependencies": {    
+    "commander": "^9.0.0",    
     "three": "^0.137.5",
+    "canvas":"^2.9.0",
     "vblob": "^1.0.2"
   }
 }

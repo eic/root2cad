@@ -44,3 +44,20 @@ One can also use network locations as file names, like:
 
 xvfb-run node export.mjs "https://eicweb.phy.anl.gov/EIC/detectors/athena/-/jobs/559705/artifacts/raw/geo/calorimeters_geo.root?inline=false" default
 ```
+
+
+
+**GDML conversion**
+
+To convert GDML one can convert it to ROOT with this one liner:
+
+```bash
+root -e 'TGeoManager::Import("drich.gdml")->Export("drich.root")'
+xvfb-run node export.mjs drich.root default -o drich.gltf
+```
+
+During this conversion, the saved object is named **'default'**
+thus we use it to convert the resulting root geometry
+
+
+

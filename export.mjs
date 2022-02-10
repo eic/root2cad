@@ -1,9 +1,26 @@
-import jsroot from "jsroot";
+import jsroot from "./jsroot/scripts/JSRoot.core.js";
 import { program } from "commander";
 import * as fs from "fs";
 import * as THREE from 'three';
 import { GLTFExporter } from './GLTFExporter.js';
 
+const description = `
+CERN ROOT geometry converter to GLTF (CAD) format
+
+Examples:
+    # convert root file
+    xvfb-run node export.mjs file.root geo_obj_name -o output.gltf
+
+    #
+
+You can view the resulting gltf file e.g. here: 
+    https://gltf.insimo.com/
+`;
+
+function printTree(tree) {
+    console.log("List of objects in the file:")
+    for(let key of file.fKeys) {  console.log(`  ${key}`); }
+}
 
 /// Prints geometry structure
 function printNodeRecursive(node, maxLevel=0, level=0, path="") {
@@ -29,8 +46,7 @@ function exportFile(fileName, objectName, outFileName) {
             // Check if such object exists
             if(!rootObject) {
                 console.error(`NO OBJECT '${objectName}' IN FILE!`);
-                console.log("List of objects in the file:")
-                for(let key of file.fKeys) {  console.log(key); }
+                printTree(tree);
                 return 1;
             }
 
@@ -67,14 +83,13 @@ function exportFile(fileName, objectName, outFileName) {
 }
 
 function main() {
-
     program
     .name('root2cad')
-    .description('CERN ROOT geometry converter to GLTF (CAD) format')
-    .version('0.8.0')
+    .description(description)    
+    .version('1.0.0')
     .option('--ls', 'Lists all objects in file. See also --list-level')
     .option('--ls-depth <int>', 'Works with --list, defines the level to print. Default 0')
-    .option('-o, --output <string>', 'Output file name')
+    .option('-o, --output <string>', 'Output file name. "exported.gltf" if not set')
     .argument('[file]', 'File name to open (CERN ROOT files)')
     .argument('[object]', 'Geometry object name in ROOT file to open')
 
@@ -82,14 +97,37 @@ function main() {
 
     const options = program.opts();
     const listCommand = options.list ? 1 : undefined;
-    console.log(program.args.length)
+    const listDepth = options.lsDepth ? options.lsDepth : 0;
+    const outFileName = options.output ? options.output : "exported.gltf"
+
+    if(program.args.length >= 2) {
+        console.log(`Converting ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
+        exportFile(program.args[0], program.args[1], outFileName);
+        return 0;
+    }
+
+    if(listCommand) {
+        console.log("Not yet implemente");
+        return 0;
+    }
+
+    //if(listCommand && program.args.length >= 2)
+
+    
+    program.help();
+    return 1;
 
     // exportFile("./drich.root", "DRICH", "drich.gltf");
 }
 
 
 // MAIN HERE
-//main();
+try {
+    main();
+}
+catch(err) {
+    console.error(err);
+}
 
 
 //jsroot.openFile("https://eicweb.phy.anl.gov/EIC/detectors/athena/-/jobs/559705/artifacts/raw/geo/calorimeters_geo.root?inline=false")

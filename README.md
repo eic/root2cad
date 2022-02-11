@@ -28,14 +28,10 @@ assimp export drich.gltf drich.obj
 
 **Prerequesties:**
 
-- One needs nodejs>13 and npm installed  
-  [Installation instructions](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-version-manager-to-install-nodejs-and-npm)
-- xvfb (X virtual framebuffer)
-    ```bash 
-       sudo apt-get install xvfb    # on ubuntu
-    ```
+- One needs nodejs>13 and npm installed [Installation instructions](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-version-manager-to-install-nodejs-and-npm)
+- xvfb (X virtual framebuffer). For Ubuntu: `sudo apt-get install xvfb`
 
-**npm install**
+**NPM install**
 
 ```
 npm install -g root2cad
@@ -44,9 +40,10 @@ npm install -g root2cad
 If npm bin paths are set correctly you should have `root2cad` command working. 
 
 
-## Run
+## Usage
 
 **root2cad** can convert ROOT geometry objects saved in root file to GLTF format. 
+The conversion works for compound and tasselated geometry. 
 
 ```
 Usage: root2cad [options] [file] [object]
@@ -78,7 +75,7 @@ xvfb-run root2cad  --ls --ls-depth=5 drich.root DRICH
 
 ```
 
-## GDML conversion
+### GDML conversion
 
 To convert GDML one can convert it to ROOT with this one liner:
 
@@ -91,7 +88,7 @@ During this conversion, the saved object is named **'default'**
 thus we use it to convert the resulting root geometry
 
 
-## Subelements conversion
+### Subelements conversion
 
 For now geometry sub elements conversion is a TODO item. But one can achieve this with relatively simple ROOT macro
 
@@ -105,9 +102,7 @@ volume.Export("drich.root")
 ```
 
 
-## Other formats
-
-![glTF logo](https://www.khronos.org/assets/uploads/apis/2020-core-gltf-2-0-asset-structure.jpg)
+### Other formats
 
 [glTF (GL Transmission Format)](https://www.khronos.org/gltf/) is a 3D file format that stores 3D model information in JSON format.
 It is common for web 3d graphics but not all CAD software can work with it. Free options to 
@@ -116,6 +111,21 @@ convert from GLTF to other formats:
 - assimp (Asset Import library)
 - Blender
 - Microsoft 3D Builder
+
+Assimp has a command line tool, that allows easy conversion:
+
+```
+# Convert to other cad formats
+assimp export drich.gltf drich.obj
+```
+
+Assimp supports many formats for export: collada, x, stp, obj, objnomtl, stl,
+stlb, ply, plyb, 3ds, gltf2, glb2, gltf, glb, assbin, assxml, x3d
+fbx, fbxa, 3mf, assjson
+
+> (!) While STEP is a common format for EIC cad exchange, our experimets opening
+> exported files in different CAD software shows that other formats like obj or x3d
+> produce cleaner conversion and better results for complex geometry
 
 
 ## Development

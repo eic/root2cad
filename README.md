@@ -1,7 +1,7 @@
 # root2cad
 CERN ROOT geometry converter to CAD format (GLTF)
 
-<img src="doc/drich_wireframe_600px-w.png" style="width:300px"/>
+<img src="https://github.com/eic/root2cad/blob/main/doc/drich_wireframe_600px-w.png" style="width:300px"/>
 
 ## Quick start
 
@@ -74,6 +74,9 @@ xvfb-run root2cad  --ls drich.root DRICH
 xvfb-run root2cad  --ls --ls-depth=5 drich.root DRICH
 
 ```
+
+Use [**GLTF VIEWER online**](https://gltf.insimo.com/) to see the results!
+
 
 ### GDML conversion
 

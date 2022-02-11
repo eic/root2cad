@@ -1,10 +1,11 @@
 {
-  "name": "rootcadex",
-  "version": "1.0.0",
+  "name": "root2cad",
+  "version": "1.0.2",
   "description": "CERN ROOT geometry export to CAD",
-  "main": "index.js",
+  "homepage": "https://github.com/eic/root2cad#readme",
+  "main": "index.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "export": "xvfb-run node export.mjs"
   },
   "keywords": [
     "ROOT",
@@ -17,6 +18,16 @@
     "commander": "^9.0.0",    
     "three": "^0.137.5",
     "canvas":"^2.9.0",
-    "vblob": "^1.0.2"
-  }
+    "vblob": "^1.0.2",
+    "atob": "^2.1.2",
+    "btoa": "^1.2.1",    
+    "gl": "^5.0.0",
+    "jsdom": "^19.0.0",
+    "mathjax": "3.2.0",
+    "xhr2": "^0.2.1",
+    "zstd-codec": "^0.1.2"
+  },
+  "bin" : {
+    "root2cad" : "index.mjs"
+  } 
 }

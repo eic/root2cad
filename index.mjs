@@ -4,19 +4,33 @@ import { program } from "commander";
 import * as fs from "fs";
 import * as THREE from 'three';
 import { GLTFExporter } from './GLTFExporter.js';
+import { NONAME } from "dns";
 
 const description = `
 CERN ROOT geometry converter to GLTF (CAD) format
 
 Examples:
-    # convert root file
-    xvfb-run node export.mjs file.root geo_obj_name -o output.gltf
+   convert geometry in a root file:
+      xvfb-run root2cad file.root geo_obj_name -o output.gltf
 
-    #
+   convert subpart of geometry:
+      xvfb-run root2cad file.root geo_obj_name subpart_name -o out.gltf
 
-You can view the resulting gltf file e.g. here: 
-    https://gltf.insimo.com/
+   convert from gdml (CERN ROOT has to be installed):
+      root -e 'TGeoManager::Import("my.gdml")->Export("my.root")'
+      xvfb-run root2cad  my.root default -o my.gltf
+
+   convert to other cad formats (install assimp):
+      assimp export drich.gltf drich.obj
+
+   list file contents:
+      xvfb-run root2cad --ls file.root
+
+   list geometry hierarchy:
+      xvfb-run root2cad --ls --ls-depth=1 file.root geo_obj_name
 `;
+
+let gVerbose = false;
 
 function printTree(nameOrFile) {
     if (typeof nameOrFile === 'string' || nameOrFile instanceof String) {
@@ -25,7 +39,7 @@ function printTree(nameOrFile) {
     }
     else {
         let file = nameOrFile;   // it is file
-        console.log(`List of objects in '${file.fFileName}' `);
+        if(gVerbose) console.log(`List of objects in '${file.fFileName}' `);
         for(let key of file.fKeys) { 
             console.log(`  ${key.fName}: ${key.fClassName}`); 
         }
@@ -33,7 +47,7 @@ function printTree(nameOrFile) {
 }
 
 
-function printGeometry(fileName, objectName, listDepth) {
+function printGeometry(fileName, objectName, listDepth, how="volume") {
 
     jsroot.openFile(fileName)
         .then(file => file.readObject(objectName))
@@ -46,8 +60,13 @@ function printGeometry(fileName, objectName, listDepth) {
                 return 1;
             }
 
-            console.log(`Opened '${objectName}' object`);
-            printNodeRecursive(rootObject.fNodes.arr[0], listDepth, 0, "");
+            if(gVerbose) console.log(`Opened '${objectName}' object`);
+            if(how==="volume"){
+                printVolumeRecursive(rootObject.fNodes.arr[0], listDepth, 0, "");
+            }
+            else {
+                printNodeRecursive(rootObject.fNodes.arr[0], listDepth, 0, "");
+            }
         })
         .catch(error => {
             console.log(error.message);
@@ -57,8 +76,9 @@ function printGeometry(fileName, objectName, listDepth) {
 
 /// Prints geometry structure
 function printNodeRecursive(node, maxLevel=0, level=0, path="") {
-    const nodeName = node.fName;      
-    console.log(path + "/" + nodeName, maxLevel);
+    const nodeName = node.fName;
+    
+    console.log(path + "/" + nodeName);
 
     if(level>=maxLevel) return;
       
@@ -70,7 +90,45 @@ function printNodeRecursive(node, maxLevel=0, level=0, path="") {
     }
 }
 
-function exportFile(fileName, objectName, outFileName) {
+function printVolumeRecursive(node, maxLevel=0, level=0, path="") {
+    let volume = node._typename === "TGeoManager"? node.fMasterVolume : node.fVolume;
+
+    const nodeName = node.fName;
+    const volumeName = volume.fName;
+    
+    console.log(path + "/" + volumeName);
+
+    if(level>=maxLevel) return;
+      
+    if (node.fVolume.fNodes) {
+        for (const childNode of node.fVolume.fNodes.arr) {            
+            printVolumeRecursive(childNode, maxLevel, level + 1, path + "/" + volumeName);
+        }
+    }
+}
+
+
+/// Find geometry with name
+function findNodeByName(node, findName) {
+    let volume = node._typename === "TGeoManager"? node.fMasterVolume : node.fVolume;
+
+    if(findName===volume.fName) {
+        return node;
+    }   
+
+    if (volume.fNodes) {
+        for (const childNode of volume.fNodes.arr) {
+            const result = findNodeByName(childNode, findName);
+            if(result) {
+                return result;
+            }
+        }
+    }
+
+    return null;
+}
+
+function exportFile(fileName, objectName, outFileName, subGeoName=null) {
 
     jsroot.openFile(fileName)
         .then(file => file.readObject(objectName))
@@ -83,14 +141,32 @@ function exportFile(fileName, objectName, outFileName) {
                 return 1;
             }
 
+            // Open success! (reporing)
             console.log(`Opened '${objectName}' object`);
-            //printNodeRecursive(rootObject.fNodes.arr[0], 0, "");
+
+            // Exctracting geometry
+            let rootGeo = rootObject;
+
+            // Do wee need to look for subcomponent? 
+            if(subGeoName) {
+                console.log(`Searching for '${subGeoName}`)
+                rootGeo = findNodeByName(rootObject, subGeoName);
+
+                // Check if we found subcomponent
+                if(!rootGeo) {
+                    console.error(`NO SUB-COMPONENT '${subGeoName}' in geometry! Use --ls command to see subcomponents`);
+                    return 1;
+                } 
+                
+                console.log(`Found ${subGeoName}`);
+            }
             
             // Load jsroot geometry package
             jsroot.require('geom').then(geo => {
                 
+                console.log(`Converting to THREEJS`);
                 // Create threejs from root geometry
-                let obj3d = geo.build(rootObject, { numfaces: 5000000, numnodes: 50000, dflt_colors: true, vislevel: 4});
+                let obj3d = geo.build(rootGeo, { numfaces: 5000000, numnodes: 50000, dflt_colors: true, vislevel: 4});
                 
                 // EXPORT!
                 console.log("Converting to GLTF format");
@@ -122,16 +198,19 @@ function main() {
     .name('root2cad')
     .description(description)
     .option('-o, --output <string>', 'Output file name. "exported.gltf" if not set')
-    .option('--ls', 'Lists all objects in file. See also --list-level')
+    .option('--ls', 'Lists all objects in file or geometry (same as --ls-vol)')
+    .option('--ls-vol', 'Lists geometry hierarchy of VOLUME names. See also --list-depth')
+    .option('--ls-node', 'Lists geometry hierarchy of NODE names. See also --list-depth')
     .option('--ls-depth <int>', 'Works with --list, defines the level to print. Default 0')
-    .version('1.0.0')
+    .version('1.1.0')
     .argument('[file]', 'File name to open (CERN ROOT files)')
     .argument('[object]', 'Geometry object name in ROOT file to open')
+    .argument('[volname]', 'Volume name in geometry hierarchy')
 
     program.parse();
 
     const options = program.opts();
-    const listCommand = options.ls ? 1 : undefined;
+    const listCommand = options.ls || options.lsVol || options.lsNode;
     const listDepth = options.lsDepth ? options.lsDepth : 0;
     const outFileName = options.output ? options.output : "exported.gltf"
 
@@ -146,9 +225,13 @@ function main() {
 
         // List of geometry structure
         if(program.args.length == 2) {
-            console.log(`Listing '${program.args[0]}' geometry contents of '${program.args[1]}'`);
-            console.log(`List depth is: ${listDepth} (controlled with --ls-depth flag)`);
-            printGeometry(program.args[0], program.args[1], listDepth);
+            if(gVerbose) {
+                console.log(`Listing '${program.args[0]}' geometry contents of '${program.args[1]}'`);
+                console.log(`List depth is: ${listDepth} (controlled with --ls-depth flag)`);
+            }
+            
+            let how = options.ls || options.lsVol? "volume": "node";
+            printGeometry(program.args[0], program.args[1], listDepth, how);
             return 0;
         }
         
@@ -157,18 +240,21 @@ function main() {
 
     // Do conversion
     if(program.args.length >= 2) {
-        console.log(`Converting ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
-        exportFile(program.args[0], program.args[1], outFileName);
+
+        if(program.args.length == 2) {
+            console.log(`Converting ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
+            exportFile(program.args[0], program.args[1], outFileName);
+        } else {
+            console.log(`Converting subgeometry ${program.args[2]} in ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
+            exportFile(program.args[0], program.args[1], outFileName, program.args[2]);
+        }
+        
         return 0;
     }
 
-    //if(listCommand && program.args.length >= 2)
-
-    
+    // Print help
     program.help();
     return 1;
-
-    // exportFile("./drich.root", "DRICH", "drich.gltf");
 }
 
 
@@ -179,6 +265,3 @@ try {
 catch(err) {
     console.error(err);
 }
-
-
-//jsroot.openFile("https://eicweb.phy.anl.gov/EIC/detectors/athena/-/jobs/559705/artifacts/raw/geo/calorimeters_geo.root?inline=false")

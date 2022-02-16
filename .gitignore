@@ -132,3 +132,5 @@ test/drich_dgml.gltf
 test/drich_gdml.root
 
 test/zdc_hcal.root
+
+temp/

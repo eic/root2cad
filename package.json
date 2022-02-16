@@ -1,6 +1,6 @@
 {
   "name": "root2cad",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "CERN ROOT geometry export to CAD",
   "homepage": "https://github.com/eic/root2cad#readme",
   "main": "index.mjs",

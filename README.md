@@ -22,6 +22,20 @@ xvfb-run root2cad  my.root default -o my.gltf
 
 # Convert to other cad formats
 assimp export drich.gltf drich.obj
+
+# list file contents
+xvfb-run root2cad --ls detector_geo_full.root
+
+# list geometry hierarchy
+xvfb-run root2cad --ls --ls-depth=1 detector_geo_full.root default
+
+# this will output something like
+# ...
+# 1    /world_volume/DRICH
+# ...
+
+# Convert subdetector DRICH
+xvfb-run root2cad detector_geo_full.root default DRICH -o drich.gltf
 ```
 
 ## Installation
@@ -46,15 +60,18 @@ If npm bin paths are set correctly you should have `root2cad` command working.
 The conversion works for compound and tasselated geometry. 
 
 ```
-Usage: root2cad [options] [file] [object]
+Usage: root2cad [options] [file] [object] [volname]
 
 Arguments:
-  file                   File name to open (CERN ROOT files)
-  object                 Geometry object name in ROOT file to open
+  file         [required] File name to open (CERN ROOT files)
+  object       [required] Geometry object name in ROOT file to open
+  volname      [optional] Volume name in geometry hierarchy
 
 Options:
   -o, --output <string>  Output file name. "exported.gltf" if not set
-  --ls                   Lists all objects in file. See also --list-level
+  --ls                   Lists all objects in file or geometry (same as --ls-vol)
+  --ls-vol               Lists geometry hierarchy of VOLUME names. See also --list-depth
+  --ls-node              Lists geometry hierarchy of NODE names. See also --list-depth
   --ls-depth <int>       Works with --list, defines the level to print. Default 0
   -V, --version          output the version number
   -h, --help             display help for command
@@ -93,16 +110,25 @@ thus we use it to convert the resulting root geometry
 
 ### Subelements conversion
 
-For now geometry sub elements conversion is a TODO item. But one can achieve this with relatively simple ROOT macro
+One can provide a volume name to export only this volume. So one has to specify file name, 
+geometry object name inside file and volume name inside the geometry. There is `--ls` command
+that helps to see detector hierarchy and volume names.
 
-```python
-import ROOT
+```bash
+# list geometry hierarchy
+xvfb-run root2cad --ls --ls-depth=1 detector_geo_full.root default
 
-ROOT.TGeoManager.Import("detector_geo_full.root")
-volume =  ROOT.gGeoManager.GetVolume("DRICH")
-volume.SetVisOnly(ROOT.kTRUE)   # Set mother volume invisible
-volume.Export("drich.root")
+# this will output something like
+# ...
+# 1    /world_volume/DRICH
+# ...
+
+# Convert subdetector DRICH
+xvfb-run root2cad detector_geo_full.root default DRICH -o drich.gltf
 ```
+
+Using `--ls` and volume names could be used to automatically split DD4HEP geometry hierarchy to 
+components in gftl format. See **auto_split_example.py** for example (files in test folder)
 
 
 ### Other formats

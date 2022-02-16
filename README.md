@@ -108,7 +108,7 @@ During this conversion, the saved object is named **'default'**
 thus we use it to convert the resulting root geometry
 
 
-### Subelements conversion
+### Individual volumes conversion
 
 One can provide a volume name to export only this volume. So one has to specify file name, 
 geometry object name inside file and volume name inside the geometry. There is `--ls` command
@@ -128,7 +128,7 @@ xvfb-run root2cad detector_geo_full.root default DRICH -o drich.gltf
 ```
 
 Using `--ls` and volume names could be used to automatically split DD4HEP geometry hierarchy to 
-components in gftl format. See **auto_split_example.py** for example (files in test folder)
+components in gftl format. See [**auto_split_example.py**](auto_split_example.py) for example (files in test folder)
 
 
 ### Other formats

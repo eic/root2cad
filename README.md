@@ -6,7 +6,7 @@ CERN ROOT geometry converter to CAD format (GLTF)
 **root2cad** is a batch converter that can be used from pure command line (tested on linux, but should work on mac and windows). 
 There is also an online converter, that could be used from your browser. 
 [Online converter](https://lhcb-web-display.app.cern.ch/#/gltf-exporter),
-[GitHub of online converter](https://github.com/andrewpap22/root_cern-To_gltf-Exporter)
+([+GitHub](https://github.com/andrewpap22/root_cern-To_gltf-Exporter))
  
 
 ## Quick start

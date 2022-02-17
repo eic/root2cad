@@ -79,7 +79,7 @@ Options:
 
 Examples: 
 
-```
+```bash
 # For drich.root that has DRICH geometry object saved to it
 xvfb-run root2cad drich.root DRICH -o drich2.gltf
 

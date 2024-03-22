@@ -1,6 +1,6 @@
 {
   "name": "root2cad",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "CERN ROOT geometry export to CAD",
   "homepage": "https://github.com/eic/root2cad#readme",
   "main": "index.mjs",
@@ -8,26 +8,20 @@
     "export": "xvfb-run node export.mjs"
   },
   "keywords": [
+    "nuclear-physics",
     "ROOT",
     "CAD",
     "geometry"
   ],
   "author": "Dmitry Romanov",
   "license": "MIT",
-  "dependencies": {    
-    "commander": "^9.0.0",    
+  "dependencies": {
+    "commander": "^9.0.0",
+    "jsroot": "^7.5.5",
     "three": "^0.137.5",
-    "canvas":"^2.9.0",
-    "vblob": "^1.0.2",
-    "atob": "^2.1.2",
-    "btoa": "^1.2.1",    
-    "gl": "^5.0.0",
-    "jsdom": "^19.0.0",
-    "mathjax": "3.2.0",
-    "xhr2": "^0.2.1",
-    "zstd-codec": "^0.1.2"
+    "vblob": "^1.0.2"
   },
-  "bin" : {
-    "root2cad" : "index.mjs"
-  } 
+  "bin": {
+    "root2cad": "index.mjs"
+  }
 }

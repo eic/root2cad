@@ -18,13 +18,13 @@ npm install -g root2cad
 # For drich.root that has DRICH geometry object saved to it
 xvfb-run root2cad drich.root DRICH -o drich2.gltf
 
-# EIC ATHENA latest full detector geometry. Look files here: 
+# EIC ePIC latest full detector geometry. Look files here: 
 # https://eicweb.phy.anl.gov/EIC/detectors/athena/-/jobs/artifacts/master/browse/geo?job=report
-xvfb-run root2cad  detector_geo_full.root default -o detector_geo_full.gltf
+xvfb-run root2cad  detector_geo_full.root Default -o detector_geo_full.gltf
 
 # Convert from gdml (CERN ROOT has to be installed)
 root -e 'TGeoManager::Import("my.gdml")->Export("my.root")'
-xvfb-run root2cad  my.root default -o my.gltf
+xvfb-run root2cad  my.root Default -o my.gltf
 
 # Convert to other cad formats
 assimp export drich.gltf drich.obj
@@ -33,7 +33,7 @@ assimp export drich.gltf drich.obj
 xvfb-run root2cad --ls detector_geo_full.root
 
 # list geometry hierarchy
-xvfb-run root2cad --ls --ls-depth=1 detector_geo_full.root default
+xvfb-run root2cad --ls --ls-depth=1 detector_geo_full.root Default
 
 # this will output something like
 # ...

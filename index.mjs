@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import jsroot from "./jsroot/scripts/JSRoot.core.js";
+import * as jsroot from "jsroot";
+import * as geom  from "jsroot/geom"
 import { program } from "commander";
 import * as fs from "fs";
-import * as THREE from 'three';
 import { GLTFExporter } from './GLTFExporter.js';
-import { NONAME } from "dns";
+import thisPackage from './package.json' assert { type: 'json' };
 
 const description = `
 CERN ROOT geometry converter to GLTF (CAD) format
@@ -39,9 +39,34 @@ function printTree(nameOrFile) {
     }
     else {
         let file = nameOrFile;   // it is file
+        // console.dir(file)
         if(gVerbose) console.log(`List of objects in '${file.fFileName}' `);
-        for(let key of file.fKeys) { 
-            console.log(`  ${key.fName}: ${key.fClassName}`); 
+        console.log(`'Name' [type] description:`);
+
+        // Step 1: Find max lengths
+        let maxFNameLength = 0;
+        let maxFClassNameLength = 0;
+        let maxFTitleLength = 0;
+
+        for (let key of file.fKeys) {
+            maxFNameLength = Math.max(maxFNameLength, key.fName.length);
+            maxFClassNameLength = Math.max(maxFClassNameLength, key.fClassName.length);
+            maxFTitleLength = Math.max(maxFTitleLength, key.fTitle.length);
+        }
+
+        // Step 2: Print headers
+        console.log(
+            `${"Name".padEnd(maxFNameLength)} |${"Type".padEnd(maxFClassNameLength)}| ${"Description".padEnd(maxFTitleLength)}`
+        );
+        console.log("-".repeat(maxFNameLength + maxFClassNameLength + maxFTitleLength + 4)); // 4 for spaces and brackets
+
+
+        // Step 2: Log with padding
+        for (let key of file.fKeys) {
+            const fNamePadded = key.fName.padEnd(maxFNameLength);
+            const fClassNamePadded = key.fClassName.padEnd(maxFClassNameLength);
+            const fTitlePadded = key.fTitle.padEnd(maxFTitleLength);
+            console.log(`${fNamePadded} |${fClassNamePadded}| ${fTitlePadded}`);
         }
     }
 }
@@ -162,34 +187,33 @@ function exportFile(fileName, objectName, outFileName, subGeoName=null) {
             }
             
             // Load jsroot geometry package
-            jsroot.require('geom').then(geo => {
-                
-                console.log(`Converting to THREEJS`);
-                // Create threejs from root geometry
-                let obj3d = geo.build(rootGeo, { numfaces: 5000000, numnodes: 50000, dflt_colors: true, vislevel: 4});
-                
-                // EXPORT!
-                console.log("Converting to GLTF format");
-                const gltfExporter = new GLTFExporter();
-                let exportOpts = {};
+            console.log(`Converting to THREEJS`);
+            // Create threejs from root geometry
+            let obj3d = geom.build(rootGeo, { numfaces: 5000000, numnodes: 50000, dflt_colors: true, vislevel: 4});
 
-                gltfExporter.parse(obj3d, function(gltf) {
-                    console.log(`Conversion done! Saving to file: ${outFileName}`);
-                    
-                    // Save to file
-                    try {
-                        const gltfText = JSON.stringify(gltf);
-                        fs.writeFileSync(outFileName, gltfText, {encoding:'utf8'});
-                        console.log("Done.");
-                    } catch(err) {
-                        console.error(err);
-                    }
-                    
-                }, exportOpts);
-            });
+            // EXPORT!
+            console.log("Converting to GLTF format");
+            const gltfExporter = new GLTFExporter();
+            let exportOpts = {};
+
+            gltfExporter.parse(obj3d, function(gltf) {
+                console.log(`Conversion done! Saving to file: ${outFileName}`);
+
+                // Save to file
+                try {
+                    const gltfText = JSON.stringify(gltf);
+                    fs.writeFileSync(outFileName, gltfText, {encoding:'utf8'});
+                    console.log("Done.");
+                } catch(err) {
+                    console.error(err);
+                }
+
+            }, exportOpts);
+
         })
         .catch(error => {
-            console.log(error.message);
+            console.error('Error during GLTF export:');
+            console.error(error.message);
         });
 }
 
@@ -198,11 +222,13 @@ function main() {
     .name('root2cad')
     .description(description)
     .option('-o, --output <string>', 'Output file name. "exported.gltf" if not set')
-    .option('--ls', 'Lists all objects in file or geometry (same as --ls-vol)')
+    .option('--ls', 'Lists all objects in file or geometry (same as --ls-vol)')    
     .option('--ls-vol', 'Lists geometry hierarchy of VOLUME names. See also --list-depth')
     .option('--ls-node', 'Lists geometry hierarchy of NODE names. See also --list-depth')
     .option('--ls-depth <int>', 'Works with --list, defines the level to print. Default 0')
-    .version('1.1.0')
+    .option('-v, --verbose', 'Use verbose output')
+    .version(thisPackage.version)
+    //.version('1.1.1')
     .argument('[file]', 'File name to open (CERN ROOT files)')
     .argument('[object]', 'Geometry object name in ROOT file to open')
     .argument('[volname]', 'Volume name in geometry hierarchy')
@@ -211,20 +237,28 @@ function main() {
 
     const options = program.opts();
     const listCommand = options.ls || options.lsVol || options.lsNode;
-    const listDepth = options.lsDepth ? options.lsDepth : 0;
+    const listDepth = options.lsDepth ? options.lsDepth : 0;    
     const outFileName = options.output ? options.output : "exported.gltf"
+    gVerbose = !!options.verbose;
 
+    if(gVerbose) {
+        console.log("Verbose output is ON");
+    }
+
+
+    // console.dir(program);
     // List something
     if(listCommand) {
+        console.log("Listing...");
 
         // List ROOT file structure
-        if(program.args.length == 1) {
+        if(program.args.length === 1) {
             printTree(program.args[0]);
             return 0;
         }
 
         // List of geometry structure
-        if(program.args.length == 2) {
+        if(program.args.length === 2) {
             if(gVerbose) {
                 console.log(`Listing '${program.args[0]}' geometry contents of '${program.args[1]}'`);
                 console.log(`List depth is: ${listDepth} (controlled with --ls-depth flag)`);
@@ -234,6 +268,8 @@ function main() {
             printGeometry(program.args[0], program.args[1], listDepth, how);
             return 0;
         }
+
+        console.log("Incorrect 'list' parameters. See --help for info and examples");
         
         return 0;
     }
@@ -241,11 +277,11 @@ function main() {
     // Do conversion
     if(program.args.length >= 2) {
 
-        if(program.args.length == 2) {
+        if(program.args.length === 2) {
             console.log(`Converting ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
             exportFile(program.args[0], program.args[1], outFileName);
         } else {
-            console.log(`Converting subgeometry ${program.args[2]} in ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
+            console.log(`Converting sub-geometry ${program.args[2]} in ${program.args[0]} / ${program.args[1]} to ${outFileName}`);
             exportFile(program.args[0], program.args[1], outFileName, program.args[2]);
         }
         
